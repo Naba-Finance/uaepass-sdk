@@ -1,0 +1,17 @@
+{
+  "note": "Same-address deployment: every contract lives at the SAME address on every supported chain (CREATE2 via Arachnid's deterministic deployment proxy). The chain list below shares the single address set in `contracts`.",
+  "contracts": {
+    "credential": "0x8bA9eB1FF63DEd9145d341f316758e6Ca132Cb0e",
+    "registry": "0x9B66841644a49187b34660fEb05d057f7f4a3C4E",
+    "validator": "0x07656Fb863E3181664014124604f6fE5A2836206",
+    "factory": "0x3B56036FeE71527879E8a423DDcF327e08aD00A8",
+    "verifier": "0xDe29EFC7d5E21308a8AE2f95fE0946D96581427f",
+    "kernelFactory": "0xaac5D4240AF87249B3f71BC8E4A2cae074A3E419"
+  },
+  "chains": {
+    "137": { "name": "Polygon PoS", "network": "mainnet" },
+    "80002": { "name": "Polygon Amoy", "network": "testnet" },
+    "36900": { "name": "ADI", "network": "mainnet" },
+    "99999": { "name": "ADI", "network": "testnet" }
+  }
+}

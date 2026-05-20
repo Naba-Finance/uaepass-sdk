@@ -1,0 +1,33 @@
+{
+  "name": "@naba/uaepass",
+  "version": "0.1.0",
+  "description": "Solidity interfaces and deployment addresses for integrating UAE Pass on-chain identity (gate functionality on UAE Pass provenance).",
+  "license": "MIT",
+  "homepage": "https://github.com/Naba-Finance/uaepass-sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Naba-Finance/uaepass-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Naba-Finance/uaepass-sdk/issues"
+  },
+  "keywords": [
+    "uaepass",
+    "solidity",
+    "ethereum",
+    "polygon",
+    "identity",
+    "account-abstraction",
+    "erc-4337",
+    "token-gating"
+  ],
+  "files": [
+    "contracts/**/*.sol",
+    "deployments/*.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
