@@ -1,4 +1,4 @@
-# @naba/uaepass
+# @naba-finance/uaepass
 
 Solidity interfaces and deployment addresses for integrating **UAE Pass on-chain identity**.
 
@@ -47,7 +47,7 @@ For most integrations you only need **`Credential`**.
 ## Install
 
 ```bash
-npm install @naba/uaepass
+npm install @naba-finance/uaepass
 ```
 
 ### Hardhat
@@ -55,7 +55,7 @@ npm install @naba/uaepass
 Import directly from `node_modules`:
 
 ```solidity
-import {ICredential} from "@naba/uaepass/contracts/ICredential.sol";
+import {ICredential} from "@naba-finance/uaepass/contracts/ICredential.sol";
 ```
 
 ### Foundry
@@ -63,13 +63,13 @@ import {ICredential} from "@naba/uaepass/contracts/ICredential.sol";
 Foundry resolves `node_modules`. Add a remapping (see [`remappings.txt`](remappings.txt)):
 
 ```
-@naba/uaepass/=node_modules/@naba/uaepass/
+@naba-finance/uaepass/=node_modules/@naba-finance/uaepass/
 ```
 
 then import the same way:
 
 ```solidity
-import {ICredential} from "@naba/uaepass/contracts/ICredential.sol";
+import {ICredential} from "@naba-finance/uaepass/contracts/ICredential.sol";
 ```
 
 ## Usage — gating a token
@@ -79,7 +79,7 @@ import {ICredential} from "@naba/uaepass/contracts/ICredential.sol";
 pragma solidity ^0.8.24;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ICredential} from "@naba/uaepass/contracts/ICredential.sol";
+import {ICredential} from "@naba-finance/uaepass/contracts/ICredential.sol";
 
 /// @notice ERC-20 holdable only by UAE Pass accounts.
 contract GatedToken is ERC20 {

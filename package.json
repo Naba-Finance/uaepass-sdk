@@ -1,5 +1,5 @@
 {
-  "name": "@naba/uaepass",
+  "name": "@naba-finance/uaepass",
   "version": "0.1.0",
   "description": "Solidity interfaces and deployment addresses for integrating UAE Pass on-chain identity (gate functionality on UAE Pass provenance).",
   "license": "MIT",

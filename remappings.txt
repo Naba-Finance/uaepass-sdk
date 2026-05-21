@@ -1,1 +1,1 @@
-@naba/uaepass/=node_modules/@naba/uaepass/
+@naba-finance/uaepass/=node_modules/@naba-finance/uaepass/
