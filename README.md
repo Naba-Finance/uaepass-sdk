@@ -14,13 +14,20 @@ Use this package to gate your contracts on UAE Pass *provenance* — for example
   function wasCreatedByUAEPass(address account) external view returns (bool);
   ```
 
-  It returns `true` iff `account` was deployed through one of the currently trusted UAE Pass account factories.
+  It returns `true` iff `account` was deployed through one of the currently trusted UAE Pass account factories **and** has executed at least one UserOperation through the UAE Pass validator (`EntryPoint.getNonce(account, 0) > 0`).
 
 - [`deployments/addresses.json`](deployments/addresses.json) — canonical contract addresses.
 
 ### What `wasCreatedByUAEPass` means (and doesn't)
 
-It is a **provenance** check: "was this address created by an official UAE Pass factory." It does **not** assert real-time control of the account, KYC/identity status, or that any particular validator is still installed. Gate on it when "is this one of our accounts" is the question you're answering.
+It is a **provenance** check: "was this address created by an official UAE Pass factory and authorised at least once through UAE Pass." It does **not** assert real-time control of the account, KYC/identity status, or that any particular validator is still installed. Gate on it when "is this one of our accounts" is the question you're answering.
+
+Deployment alone is not enough: `AccountFactory.createAccount` is permissionless and accepts any identity commitment, so anyone can deploy an account that no one can operate. The nonce check excludes such inert accounts. Consequences:
+
+- **An account becomes eligible during its first UserOperation**, not at deployment. A freshly deployed account that has not yet sent a UserOperation cannot receive a token gated on this predicate.
+- **Eligibility is monotonic** while the factory stays trusted: the nonce never decreases.
+- **False negatives only.** An account that only ever uses a non-zero nonce key stays ineligible. The Naba wallet always uses nonce key 0.
+- **Execution only.** Do not call it from `validateUserOp` or paymaster validation: it reads EntryPoint and factory storage, which ERC-7562 forbids during validation.
 
 ## Deployed addresses
 
@@ -28,12 +35,15 @@ All contracts use a **same-address deployment**: the address is identical on eve
 
 | Contract        | Address                                      |
 | --------------- | -------------------------------------------- |
-| `Credential`    | `0x8bA9eB1FF63DEd9145d341f316758e6Ca132Cb0e` |
-| `Registry`      | `0x9B66841644a49187b34660fEb05d057f7f4a3C4E` |
-| `Validator`     | `0x07656Fb863E3181664014124604f6fE5A2836206` |
-| `AccountFactory`| `0x3B56036FeE71527879E8a423DDcF327e08aD00A8` |
-| `Verifier`      | `0xDe29EFC7d5E21308a8AE2f95fE0946D96581427f` |
-| `KernelFactory` | `0xaac5D4240AF87249B3f71BC8E4A2cae074A3E419` |
+| `Credential`     | `0x8bA9eB1FF63DEd9145d341f316758e6Ca132Cb0e` |
+| `FactoryAdapter` | `0x8B8dDa76Ba45dD79a6011B6fbaCFaEB209BA7290` |
+| `AccountFactory` | `0x3B56036FeE71527879E8a423DDcF327e08aD00A8` |
+| `Registry`       | `0x9B66841644a49187b34660fEb05d057f7f4a3C4E` |
+| `Validator`      | `0x07656Fb863E3181664014124604f6fE5A2836206` |
+| `Verifier`       | `0xDe29EFC7d5E21308a8AE2f95fE0946D96581427f` |
+| `KernelFactory`  | `0xaac5D4240AF87249B3f71BC8E4A2cae074A3E419` |
+
+`FactoryAdapter` is the only factory in `Credential`'s trusted list. It wraps `AccountFactory` and adds the nonce check. `AccountFactory` is where accounts are deployed, but it is **not** a trusted factory itself: `isTrustedFactory(AccountFactory)` is `false`, and its own `deployedByThisFactory` also returns `true` for inert accounts. Always gate through `Credential`.
 
 | Chain         | Chain ID | Network |
 | ------------- | -------- | ------- |
@@ -94,6 +104,7 @@ contract GatedToken is ERC20 {
     // OZ v5 transfer hook — runs on mint, transfer, and burn.
     function _update(address from, address to, uint256 value) internal override {
         // Allow burns (to == address(0)); gate every recipient otherwise.
+        // Note: a new account becomes eligible during its first UserOperation.
         if (to != address(0) && !credential.wasCreatedByUAEPass(to)) {
             revert NotUAEPassAccount(to);
         }

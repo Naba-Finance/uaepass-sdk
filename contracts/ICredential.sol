@@ -5,13 +5,37 @@ pragma solidity >=0.8.4;
 /// @author Naba Finance
 /// @notice Public, dependency-free interface to the UAE Pass `Credential` contract.
 ///         Integrators use this to gate functionality on UAE Pass provenance —
-///         i.e. "was this address created by an official UAE Pass account factory".
+///         i.e. "was this address created by an official UAE Pass account factory
+///         and authorised at least once through UAE Pass".
 ///
-/// @dev    The canonical predicate is {wasCreatedByUAEPass}. It is a pure
-///         provenance check: it returns true iff `account` was deployed through
-///         one of the currently trusted UAE Pass account factories. It does NOT
-///         attest to real-time control, KYC status, or that any particular
-///         validator is still installed on the account.
+/// @dev    The canonical predicate is {wasCreatedByUAEPass}. It is a provenance
+///         check: it returns true iff, for at least one currently trusted
+///         factory, `account` was deployed by that factory AND
+///         `EntryPoint.getNonce(account, 0) > 0`, i.e. the account has executed
+///         at least one UserOperation through its root validator (the UAE Pass
+///         validator). Deployment alone is not enough, because account creation
+///         is permissionless and accepts any identity commitment.
+///
+///         Consequences for integrators:
+///         - An account becomes eligible during its first UserOperation
+///           (the EntryPoint increments the nonce before execution), and not
+///           before. A freshly deployed account that has not yet sent a
+///           UserOperation is NOT eligible.
+///         - Eligibility is monotonic while the factory stays trusted: the
+///           nonce never decreases.
+///         - Accounts that only ever use a non-zero nonce key stay ineligible
+///           (false negatives are possible, false positives are not).
+///         - Do NOT call it from ERC-4337 validation code (validateUserOp,
+///           paymaster validation): it reads EntryPoint and factory storage,
+///           which ERC-7562 forbids there. Call it from execution only.
+///
+///         It does NOT attest to real-time control, KYC status, or that any
+///         particular validator is still installed on the account.
+///
+///         The trusted factory list contains the `FactoryAdapter`, which wraps
+///         the `AccountFactory` and adds the nonce check. The raw
+///         `AccountFactory` is the deployment entry point but is not itself
+///         trusted; do not query its `deployedByThisFactory` as a substitute.
 ///
 ///         Deployed at the same address on every supported chain (CREATE2
 ///         same-address scheme). See deployments/addresses.json / the README.
@@ -54,9 +78,11 @@ interface ICredential {
     function factoriesLength() external view returns (uint256);
 
     /// @notice Whether `account` was created through a currently trusted UAE
-    ///         Pass account factory.
+    ///         Pass account factory and has executed at least one UserOperation.
     /// @dev    Provenance check only — see the interface-level notes. Returns
-    ///         false for any address not deployed by a trusted factory.
+    ///         false for any address not deployed by a trusted factory, and for
+    ///         a deployed account whose `EntryPoint.getNonce(account, 0)` is 0.
+    ///         Not callable during ERC-4337 validation (ERC-7562).
     /// @param account The address to check.
     /// @return True if the account is of UAE Pass provenance.
     function wasCreatedByUAEPass(address account) external view returns (bool);
